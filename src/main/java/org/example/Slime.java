@@ -103,8 +103,8 @@ public class Slime extends JPanel {
         int x = getX();
         int y = getY();
 
-        int panelWidth = ui.getWidth();      // ширина родительского окна
-        int slimeWidth = getWidth();         // ширина самого слайма
+        int panelWidth = ui.getWidth();
+        int slimeWidth = getWidth();
         int maxRight = panelWidth - slimeWidth;
         int maxLeft = 0;
 
@@ -115,14 +115,12 @@ public class Slime extends JPanel {
         }
 
         if (isRight) {
-            // Движение вправо
             if (x + speed <= maxRight+32) {
                 setLocation((int) (x + speed), y);
             } else {
                 setLocation(maxRight+32, y);
             }
         } else {
-            // Движение влево
             if (x - speed >= maxLeft-38) {
                 setLocation((int) (x - speed), y);
             } else {
