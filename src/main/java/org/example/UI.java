@@ -7,27 +7,48 @@ import java.awt.event.KeyListener;
 
 public class UI extends JFrame implements KeyListener {
 
-    private final FrameHandler frameHandler = new FrameHandler();
-    private Slime slime = new Slime(this,frameHandler);
+    private final GameLogic gameLogic;
+
+    private final Slime slime;
+    private final Monster monster;
+
+    private Component[] components;
 
     public UI() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        setLocation(screenSize.width / 2 - 150, screenSize.height / 2 - 150);
         setPreferredSize(new Dimension(300, 300));
-        frameHandler.start();
+
+        slime = new Slime(this);
+        monster = new Monster(this);
+
         slime.setBounds(-40, 134, 128, 128);
+        monster.setBounds(170, 182, 128, 87);
+
         slime.action();
+        monster.action();
+
         add(slime);
+        add(monster);
         pack();
+
+        components = getContentPane().getComponents();
+
+        gameLogic = new GameLogic(this);
+        slime.setGameLogic(gameLogic);
+        monster.setGameLogic(gameLogic);
+
+        slime.startAnimate();
+        monster.startAnimate();
+
+
 
         addKeyListener(this);
         setFocusable(true);
         requestFocusInWindow();
         setVisible(true);
-    }
-
-    public void setSlimePosition(int x){
-         slime.setLocation(x,slime.getY());
     }
 
     @Override
@@ -55,6 +76,7 @@ public class UI extends JFrame implements KeyListener {
             case KeyEvent.VK_E:
                 slime.setE(true);
                 break;
+
         }
         slime.doIt();
     }
@@ -80,5 +102,9 @@ public class UI extends JFrame implements KeyListener {
                 slime.setSpace(false);
             }
         }
+    }
+
+    public Component[] getEntities() {
+        return components;
     }
 }

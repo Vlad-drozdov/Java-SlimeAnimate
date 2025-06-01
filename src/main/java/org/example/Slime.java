@@ -1,35 +1,22 @@
 package org.example;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
-public class Slime extends JPanel {
+public class Slime extends Entity {
 
-    private BufferedImage spriteSheet;
-    private BufferedImage currentFrame;
-    private final int frameWidth = 128;
-    private final int frameHeight = 128;
-    private int frameX = 0;
-    private final int frameY = 0;
-    private final int dx = 128;
+    private final SlimeFrameHandler frameHandler;
+    private final UI ui;
+
     private final int moveDx = 7;
 
-    private final FrameHandler frameHandler;
-    private final UI ui;
-    private final Map<String, BufferedImage> animations = new HashMap<>();
-
-    private String nowAnimate = "/Blue_Slime/Idle.png";
     private String previousAnimate = "";
-    private int animateFrames = 8;
+
     private boolean isRight = true;
     private boolean isMove = false;
     private boolean isJump = false;
+    private boolean isAttack = false;
 //    private boolean isIdle = true;
 
     private boolean space = false;
@@ -38,11 +25,22 @@ public class Slime extends JPanel {
     private boolean a = false;
     private boolean e = false;
 
-    public Slime(UI ui, FrameHandler frameHandler) {
-        this.frameHandler = frameHandler;
+    public Slime(UI ui) {
+        super();
         this.ui = ui;
+        collision = new CollisionManager();
+        collision.setHitBox(getX()+84,getY()+97,15,18);
+        frameWidth = 128;
+        frameHeight = 128;
+        dx = 128;
+        nowAnimate = "/Blue_Slime/Idle.png";
         loadAnimations();
-        frameHandler.addObject(this);
+        animateFrames = animations.get(nowAnimate).getWidth()/frameWidth;
+        frameHandler = new SlimeFrameHandler(this);
+    }
+
+    public void startAnimate(){
+        frameHandler.start();
     }
 
     private void loadAnimations() {
@@ -63,32 +61,24 @@ public class Slime extends JPanel {
         }
     }
 
-    public BufferedImage flip(BufferedImage original) {
-        int w = original.getWidth();
-        int h = original.getHeight();
-        BufferedImage flipped = new BufferedImage(w, h, original.getType());
-        Graphics2D g = flipped.createGraphics();
-        AffineTransform transform = new AffineTransform();
-        transform.scale(-1, 1);
-        transform.translate(-w, 0);
-        g.drawImage(original, transform, null);
-        g.dispose();
-        return flipped;
-    }
-
     public void doIt() {
+//        if (isJump) return;
+
         if (e) {
             nowAnimate = "/Blue_Slime/Attack_1.png";
+            isAttack = true;
         } else if (a || d) {
             isMove = true;
             if (space){
                 nowAnimate ="/Blue_Slime/Jump.png";
+//                isJump = true;
             }
             else {
                 nowAnimate = shift ? "/Blue_Slime/Run.png" : "/Blue_Slime/Walk.png";
             }
         } else if (space) {
             nowAnimate = "/Blue_Slime/Jump.png";
+//            isJump = true;
         } else {
             nowAnimate = "/Blue_Slime/Idle.png";
         }
@@ -102,6 +92,9 @@ public class Slime extends JPanel {
     public void move() {
         int x = getX();
         int y = getY();
+
+//        int hitBoxX = collision.getHitBox().x;
+        int hitBoxY = collision.getHitBox().y;
 
         int panelWidth = ui.getWidth();
         int slimeWidth = getWidth();
@@ -120,30 +113,16 @@ public class Slime extends JPanel {
             } else {
                 setLocation(maxRight+32, y);
             }
-        } else {
+            collision.setHitBoxLocation(x + 84, hitBoxY);
+        }
+        else {
             if (x - speed >= maxLeft-38) {
                 setLocation((int) (x - speed), y);
             } else {
                 setLocation(maxLeft-38, y);
             }
+            collision.setHitBoxLocation(x + 26, hitBoxY);
         }
-    }
-
-
-    public void action() {
-        spriteSheet = animations.get(nowAnimate);
-        animateFrames = spriteSheet.getWidth() / frameWidth;
-        frameX = 0;
-        currentFrame = spriteSheet.getSubimage(frameX, frameY, frameWidth, frameHeight);
-    }
-
-    protected void animateStep() {
-        frameX += dx;
-        if (frameX >= spriteSheet.getWidth()) {
-            frameX = 0;
-        }
-        currentFrame = spriteSheet.getSubimage(frameX, frameY, frameWidth, frameHeight);
-        repaint();
     }
 
     @Override
@@ -158,7 +137,7 @@ public class Slime extends JPanel {
         }
     }
 
-    public void setRight(boolean right) { isRight = right; }
+
 
     public void setE(boolean e) { this.e = e; }
 
@@ -172,9 +151,54 @@ public class Slime extends JPanel {
 
 //    public boolean isShift() { return shift; }
 
-    public int getAnimateFrames() { return animateFrames; }
+
+
+    public void setRight(boolean right) { isRight = right; }
+
+    public boolean isRight() { return isRight; }
 
     public boolean isMove() { return isMove; }
 
     public void setMove(boolean move) { isMove = move; }
+
+    public boolean isJump() { return isJump; }
+
+    public void setJump(boolean jump) { isJump = jump; }
+
+    public boolean isAttack() { return isAttack; }
+
+    public void setAttack(boolean b) { isAttack = b; }
 }
+
+class SlimeFrameHandler extends Thread {
+
+    private final Slime slime;
+
+    public SlimeFrameHandler(Slime slime){
+        this.slime = slime;
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            for (int i = 0; i < slime.getAnimateFrames()-1; i++) {
+                slime.animateStep();
+                if (slime.isMove()) slime.move();
+                if (slime.isAttack())
+                    if (i == slime.getAnimateFrames()-2) slime.getGameLogic().checkHit();
+                try {
+                    sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if (slime.isAttack()) slime.setAttack(false);
+//            if (slime.isJump()){
+//                slime.setJump(false);
+//            }
+
+            slime.doIt();
+        }
+    }
+}
+
