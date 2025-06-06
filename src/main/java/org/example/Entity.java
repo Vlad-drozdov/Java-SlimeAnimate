@@ -34,14 +34,14 @@ public abstract class Entity extends JPanel implements EntityInterface {
     }
 
     @Override
-    public void action() {
+    public void action() { // Просчитывает количество кадров и устанавливает изображение на анимацию
         spriteSheet = animations.get(nowAnimate);
         animateFrames = spriteSheet.getWidth() / frameWidth;
         frameX = 0;
         currentFrame = spriteSheet.getSubimage(frameX, frameY, frameWidth, frameHeight);
     }
 
-    protected void animateStep() {
+    protected void animateStep() { // Переключает кадры
         frameX += dx;
         if (frameX >= spriteSheet.getWidth()) {
             frameX = 0;

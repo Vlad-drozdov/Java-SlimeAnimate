@@ -7,11 +7,11 @@ import java.io.IOException;
 public class Monster extends Entity {
 
     private MonsterFrameHandler frameHandler;
-    private final UI ui;
+    private final GamePanel ui;
 
     private boolean isDie = false;
 
-    public Monster(UI ui) {
+    public Monster(GamePanel ui) {
         super();
         this.ui = ui;
         collision = new CollisionManager();
@@ -21,7 +21,7 @@ public class Monster extends Entity {
         dx = frameWidth;
         nowAnimate = "/Minotaur_01/Idle.png";
         loadAnimations();
-        animateFrames = animations.get(nowAnimate).getWidth() / frameWidth;
+        animateFrames = animations.get(nowAnimate).getWidth()/frameWidth;
         frameHandler = new MonsterFrameHandler(this);
     }
 
@@ -37,22 +37,24 @@ public class Monster extends Entity {
 
         for (String path : paths) {
             try {
-                animations.put(path, ImageIO.read(getClass().getResource(path)));
+                animations.put(path, ImageIO.read(getClass().getResourceAsStream(path)));
             } catch (IOException ex) {
                 throw new RuntimeException("Error loading " + path);
             }
         }
     }
-    public void idle(){
-        nowAnimate = "/Minotaur_01/Idle.png";
-        action();
-    }
+
+//    public void idle(){
+//        nowAnimate = "/Minotaur_01/Idle.png";
+//        action();
+//    }
 
     public void die(){
         if (!isDie){
             nowAnimate = "/Minotaur_01/Die.png";
             action();
             isDie = true;
+            frameHandler.setChangeAnimation(true);
         }
     }
 
@@ -65,7 +67,7 @@ public class Monster extends Entity {
         }
     }
 
-    public void diying() {
+    public void dieFinished() {
         ui.remove(this);
         ui.repaint();
     }
@@ -73,8 +75,10 @@ public class Monster extends Entity {
 
 class MonsterFrameHandler extends Thread {
 
-    private Monster monster;
+    private final Monster monster;
     private boolean running = true;
+    private String currentAnimation;
+    private boolean changeAnimation = false;
 
     public MonsterFrameHandler(Monster monster){
         this.monster = monster;
@@ -82,19 +86,37 @@ class MonsterFrameHandler extends Thread {
 
     @Override
     public void run() {
-        while (running) {
+        whileLoop: while (running) {
+            currentAnimation = monster.nowAnimate;
+
             for (int i = 0; i < monster.getAnimateFrames()-1; i++) {
+                if (changeAnimation || !monster.nowAnimate.equals(currentAnimation)) {
+                    changeAnimation = false;
+                    continue whileLoop;
+                }
+
                 monster.animateStep();
+
                 try {
                     sleep(100);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
-            if (monster.nowAnimate.equals("/Minotaur_01/Die.png")){
-                monster.diying();
+
+            if (monster.nowAnimate.equals("/Minotaur_01/Die.png")) {
+                monster.dieFinished();
                 running = false;
             }
         }
+    }
+
+    public void setChangeAnimation(boolean b){
+        changeAnimation = b;
+    }
+
+    public void stopHandler(){
+        running = false;
+        interrupt();
     }
 }

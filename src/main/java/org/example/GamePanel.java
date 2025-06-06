@@ -5,7 +5,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
-public class UI extends JFrame implements KeyListener {
+public class GamePanel extends JFrame implements KeyListener {
 
     private final GameLogic gameLogic;
 
@@ -14,7 +14,7 @@ public class UI extends JFrame implements KeyListener {
 
     private Component[] components;
 
-    public UI() {
+    public GamePanel() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();

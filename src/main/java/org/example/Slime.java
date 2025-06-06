@@ -7,17 +7,15 @@ import java.io.IOException;
 public class Slime extends Entity {
 
     private final SlimeFrameHandler frameHandler;
-    private final UI ui;
+    private final GamePanel ui;
 
     private final int moveDx = 7;
 
-    private String previousAnimate = "";
+    private String previousAnimate="";
 
     private boolean isRight = true;
     private boolean isMove = false;
-    private boolean isJump = false;
     private boolean isAttack = false;
-//    private boolean isIdle = true;
 
     private boolean space = false;
     private boolean shift = false;
@@ -25,7 +23,7 @@ public class Slime extends Entity {
     private boolean a = false;
     private boolean e = false;
 
-    public Slime(UI ui) {
+    public Slime(GamePanel ui) {
         super();
         this.ui = ui;
         collision = new CollisionManager();
@@ -54,7 +52,7 @@ public class Slime extends Entity {
 
         for (String path : paths) {
             try {
-                animations.put(path, ImageIO.read(getClass().getResource(path)));
+                animations.put(path, ImageIO.read(getClass().getResourceAsStream(path)));
             } catch (IOException ex) {
                 throw new RuntimeException("Error loading " + path);
             }
@@ -62,29 +60,32 @@ public class Slime extends Entity {
     }
 
     public void doIt() {
-//        if (isJump) return;
 
         if (e) {
             nowAnimate = "/Blue_Slime/Attack_1.png";
             isAttack = true;
-        } else if (a || d) {
+        }
+        else if (a || d) {
             isMove = true;
             if (space){
                 nowAnimate ="/Blue_Slime/Jump.png";
-//                isJump = true;
             }
             else {
                 nowAnimate = shift ? "/Blue_Slime/Run.png" : "/Blue_Slime/Walk.png";
             }
-        } else if (space) {
+        }
+        else if (space) {
             nowAnimate = "/Blue_Slime/Jump.png";
-//            isJump = true;
-        } else {
+        }
+        else {
             nowAnimate = "/Blue_Slime/Idle.png";
         }
 
+
+
         if (!nowAnimate.equals(previousAnimate)) {
             previousAnimate = nowAnimate;
+            frameHandler.setChangeAnimation(true);
             action();
         }
     }
@@ -149,10 +150,6 @@ public class Slime extends Entity {
 
     public void setShift(boolean shift) { this.shift = shift; }
 
-//    public boolean isShift() { return shift; }
-
-
-
     public void setRight(boolean right) { isRight = right; }
 
     public boolean isRight() { return isRight; }
@@ -160,10 +157,6 @@ public class Slime extends Entity {
     public boolean isMove() { return isMove; }
 
     public void setMove(boolean move) { isMove = move; }
-
-    public boolean isJump() { return isJump; }
-
-    public void setJump(boolean jump) { isJump = jump; }
 
     public boolean isAttack() { return isAttack; }
 
@@ -174,31 +167,49 @@ class SlimeFrameHandler extends Thread {
 
     private final Slime slime;
 
+    private boolean changeAnimation = false;
+    private String currentAnimation;
+
     public SlimeFrameHandler(Slime slime){
         this.slime = slime;
     }
 
     @Override
     public void run() {
-        while (true) {
+        whileLoop: while (true) {
+            currentAnimation = slime.nowAnimate;
+
             for (int i = 0; i < slime.getAnimateFrames()-1; i++) {
+
+                if (changeAnimation || !slime.nowAnimate.equals(currentAnimation)) {
+                    changeAnimation = false;
+                    continue whileLoop;
+                }
+
                 slime.animateStep();
+
                 if (slime.isMove()) slime.move();
                 if (slime.isAttack())
                     if (i == slime.getAnimateFrames()-2) slime.getGameLogic().checkHit();
+
                 try {
                     sleep(100);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
+
             if (slime.isAttack()) slime.setAttack(false);
-//            if (slime.isJump()){
-//                slime.setJump(false);
-//            }
 
             slime.doIt();
         }
     }
+
+    public void setChangeAnimation(boolean b){
+        changeAnimation = b;
+    }
+
 }
+
+
 

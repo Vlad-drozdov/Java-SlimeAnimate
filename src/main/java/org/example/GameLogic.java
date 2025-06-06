@@ -5,11 +5,11 @@ import java.util.ArrayList;
 
 public class GameLogic {
 
-    private final UI ui;
+    private final GamePanel ui;
     private Slime hero;
     private ArrayList<Entity> enemies = new ArrayList<>();
 
-    public GameLogic(UI ui) {
+    public GameLogic(GamePanel ui) {
         this.ui = ui;
         Component[] objects = ui.getEntities();
         for (Component entity: objects){
