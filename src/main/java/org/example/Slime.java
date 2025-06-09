@@ -109,18 +109,21 @@ public class Slime extends Entity {
         }
 
         if (isRight) {
-            if (x + speed <= maxRight+32) {
+            if (x + speed <= maxRight) {
                 setLocation((int) (x + speed), y);
+
             } else {
-                setLocation(maxRight+32, y);
+                setLocation(maxRight, y);
+                logic.heroMoved((int) speed);
             }
             collision.setHitBoxLocation(x + 84, hitBoxY);
         }
         else {
-            if (x - speed >= maxLeft-38) {
+            if (x - speed >= maxLeft) {
                 setLocation((int) (x - speed), y);
             } else {
-                setLocation(maxLeft-38, y);
+                setLocation(maxLeft, y);
+                logic.heroMoved((int) -speed);
             }
             collision.setHitBoxLocation(x + 26, hitBoxY);
         }

@@ -10,7 +10,7 @@ import java.util.Map;
 public abstract class Entity extends JPanel implements EntityInterface {
 
     protected CollisionManager collision;
-    private GameLogic logic;
+    GameLogic logic;
 
     protected BufferedImage spriteSheet;
     protected BufferedImage currentFrame;
