@@ -7,7 +7,7 @@ public class SettingsData {
     private int width;
     private int height;
 
-
+    private boolean musicOn = true;
 
 
     public int getGameX() { return GameX; }
@@ -21,4 +21,7 @@ public class SettingsData {
 
     public int getHeight() { return height; }
     public void setHeight(int height) { this.height = height; }
+
+    public boolean isMusicOn() { return musicOn; }
+    public void setMusicOn(boolean musicOn) { this.musicOn = musicOn; }
 }
